@@ -34,6 +34,8 @@ bot.sendNotification = function(info, type, msg) {
 
 var commands = {}
 
+var defaultCommands = ["help", "load", "unload", "reload"]; // for preventing loading/unloading of default commands
+
 commands.help = {};
 commands.help.args = '';
 commands.help.help = "Displays a list of usable commands.";
@@ -69,6 +71,12 @@ commands.load.help = '';
 commands.load.hide = true;
 commands.load.main = function(bot, msg) {
     if (msg.author.id == bot.OWNERID) {
+
+        if(defaultCommands.includes(msg.content)) {
+            bot.sendNotification("Cannot load default commands", "error", msg);
+            return;
+        }
+
         try {
             delete commands[msg.content];
             delete require.cache[__dirname + '/commands/' + msg.content + '.js'];
@@ -88,6 +96,12 @@ commands.unload.help = '';
 commands.unload.hide = true;
 commands.unload.main = function(bot, msg) {
     if (msg.author.id == bot.OWNERID) {
+
+        if(defaultCommands.includes(msg.content)) {
+            bot.sendNotification("Cannot unload default commands", "error", msg);
+            return;
+        }
+
         try {
             delete commands[msg.content];
             delete require.cache[__dirname + '/commands/' + msg.content + '.js'];
