@@ -32,6 +32,17 @@ bot.sendNotification = function(info, type, msg) {
     msg.channel.sendMessage('', {embed});
 }
 
+var load = function(name, msg) {
+    try {
+            delete commands[name];
+            delete require.cache[__dirname + '/commands/' + name+ '.js'];
+            commands[name] = require(__dirname + '/commands/' + name + '.js');
+            bot.sendNotification("Loaded " + name + ".js succesfully.", "success", msg);
+    } catch (err) {
+        bot.sendNotification("The command was not found, or there was an error loading it.", "error", msg);
+    }
+}
+
 var commands = {}
 
 var defaultCommands = ["help", "load", "unload", "reload"]; // for preventing loading/unloading of default commands
@@ -76,15 +87,7 @@ commands.load.main = function(bot, msg) {
             bot.sendNotification("Cannot load default commands", "error", msg);
             return;
         }
-
-        try {
-            delete commands[msg.content];
-            delete require.cache[__dirname + '/commands/' + msg.content + '.js'];
-            commands[msg.content] = require(__dirname + '/commands/' + msg.content + '.js');
-            bot.sendNotification("Loaded " + msg.content + ".js succesfully.", "success", msg);
-        } catch (err) {
-            bot.sendNotification("The command was not found, or there was an error loading it.", "error", msg);
-        }
+        load(msg.content, msg);
     } else {
         bot.sendNotification("You do not have permission to use this command.", "error", msg);
     }
@@ -121,12 +124,13 @@ commands.reload.hide = true;
 commands.reload.main = function(bot, msg) {
     if (msg.author.id == bot.OWNERID) {
         try {
-            delete commands[msg.content];
-            delete require.cache[__dirname + '/commands/' + msg.content + '.js'];
-            commands[args] = require(__dirname + '/commands/' + msg.content + '.js');
-            bot.sendNotification("Reloaded " + msg.content + ".js successfully.", "success", msg);
+            for(let c in commands) {
+                if(!(defaultCommands.includes(c))) {
+                    load(c, msg);
+                }
+            }
         } catch (err) {
-            msg.channel.sendMessage("Command not found");
+            msg.channel.sendMessage("Error in reloading commands");
         }
     } else {
         bot.sendNotification("You do not have permission to use this command.", "error", msg);
